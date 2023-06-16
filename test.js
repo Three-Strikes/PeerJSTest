@@ -14,6 +14,8 @@ let conn;
 function connectToPeer(destId) {
 	console.log(destId + " debug");
 	conn = peer.connect(destId);
+	console.log(conn);
+	console.log("yo");
 	conn.on('error', function (error) {
 		console.log(error);
 	});
@@ -53,7 +55,7 @@ function callPeer(destId) {
 
 //On connection received say something
 peer.on('connection', function (conn) { // Receive messages
-	document.getElementById('connectionIndicator').style = 'color: green;';
+	document.getElementById('connectionIndicator').style.color = 'green';
 	conn.on('data', function (data) {
 		console.log('Received', data);
 	});
