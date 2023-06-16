@@ -1,4 +1,4 @@
-let peer = new Peer('rca', {
+let peer = new Peer('rca2', {
 	host: "192.168.1.32",
 	port: 9000,
 	path: "/sispeer",
