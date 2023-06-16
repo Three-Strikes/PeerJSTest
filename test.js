@@ -59,7 +59,9 @@ peer.on('connection', function (conn) { // Receive messages
 	conn.on('data', function (data) {
 		console.log('Received', data);
 	});
-
+	conn.on('error', function (error) {
+		console.log(error);
+	});
 	// Send messages
 	conn.send('Hello!');
 });
