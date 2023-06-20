@@ -41,7 +41,7 @@ function connectToPeer(destId) {
 			console.log('Received', data);
 		});
 
-		if (!connectionList.includes(destId)) {
+		if (!connectionList.includes(destId)) { //Adicionar id's abaixo do header se a conexão for bem sucedida.
 			var p = document.createElement('p');
 			p.innerHTML = destId;
 			connectionList.push(destId);
@@ -52,19 +52,29 @@ function connectToPeer(destId) {
 		conn.send('Hello!');
 	});
 }
+//Envia uma mensagem de texto pela conexão de dados establecida.
 
 function sendMessage(text) {
 	console.log(text);
 	conn.send(text);
 }
 
+//Liga a todos os peers na connectionList
 
 async function goThroughListForCall() {
+	//Isto vai buscar os media devices a que o browser consegue aceder, neste caso, o microfone e a camara.
 	const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 	connectionList.forEach(element => {
 		callPeer(element, stream);
 	});
 }
+
+/* 
+	Realiza uma chamada com todos os peers a que este peer está ligado. 
+	Utiliza o testCamera(); para ligar a própria camara no canto superior direito.
+	call.on -> stream é definido aqui para que os vídeos dos outros peers sejam injetados na página
+	do utilizador que iniciou as chamadas à medida que recebe "streams" dos peers que aceitaram a chamada.
+*/
 
 async function callPeer(destId, stream) {
 	try {
@@ -87,16 +97,18 @@ async function callPeer(destId, stream) {
 	}
 }
 
+// Isto abre a camara do utilizador, e coloca-a no canto superior direito.
 async function testCamera() {
 	const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 	console.log(stream);
 	var video = document.getElementById('ownvideoelement');
 	video.srcObject = stream;
 	video.autoplay = true;
-	//video.onloadedmetadata = () => { video.play(); };
 }
 
-//On connection received say something
+/*
+	Quando um Peer recebe uma conexão este código é executado.
+*/
 peer.on('connection', function (conn) { // Receive messages
 	document.getElementById('connectionIndicator').style.color = 'green';
 	conn.on('data', function (data) {
@@ -108,6 +120,15 @@ peer.on('connection', function (conn) { // Receive messages
 	conn.send('Hello!');
 });
 
+/*	
+	Quando um peer recebe uma call, esta função corre automaticamente do lado do peer que recebe a call.
+	Se for uma videochamada, a chamada é respondida com a câmara do utilizador, que é enviada de volta para o Peer que iniciou a chamada.
+	Depois, é definido que quando a MediaConnection (o objeto "call") recebe uma stream (por exemplo a câmara de um Peer), esta stream é adicionada ao div da
+	lista de vídeos.
+	
+	Se for screenshare, a call é respondida sem uma stream, e a stream recebida é adicionada ao elemento de screen sharing.
+*/
+
 peer.on('call', async function (call) {
 	console.log(call);
 	// Answer the call, providing our mediaStream
@@ -117,6 +138,7 @@ peer.on('call', async function (call) {
 			call.answer(stream);
 			var blankvideo = document.createElement('video');
 			blankvideo.id = 'blank';
+			var video = document.createElement('video');
 
 			call.on('stream', function (remoteStream) {
 				var div = document.getElementById('videoList');
@@ -149,17 +171,27 @@ peer.on('call', async function (call) {
 
 });
 
+/*
+	Função utilizada só para ver que connections estão establecidas para este peer.
+*/
+
 function checkConnections() {
 	console.log(peer.connections);
 }
-
+/*
+	Função que percorre a lista de conexões para establecer MediaConnections de screen sharing para todos os peers a que este peer está conectado.
+*/
 async function shareScreenToAllPeers() {
+	//Isto dá prompt ao utilizador a que janela ou ecrã quer partilhar com o browser e outros peers.
 	const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
 	connectionList.forEach(element => {
 		shareScreen(element, stream);
 	});
 }
 
+/*
+	Esta função establece uma MediaConnection entre dois peers para screensharing.
+*/
 async function shareScreen(destId, stream) {
 	try {
 		peer.call(destId, stream, { metadata: { "type": "screenShare" } });
