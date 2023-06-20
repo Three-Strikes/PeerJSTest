@@ -16,17 +16,26 @@
 <body>
 	<h1>Header 1</h1>
 	<div id="connectionIndicator">
-		<p>wow</p>
+
 	</div>
 	<input id="PeerIDToConnectTo" type="text">
 	<button id="connectbutton" onclick="connectToPeer(PeerIDToConnectTo.value)"> Connect!!!</button>
 
 	<input id="message" type="text">
-	<button id="sendMessagebutton" onclick="sendMessage(message.value)"> Send!</button>
-	<button id="callPeerbutton" onclick="callPeer(PeerIDToConnectTo.value)"> Video Call!</button>
+	<button id="sendMessagebutton" onclick="sendMessage(message.value)"> Send! </button>
+	<button id="callPeerbutton" onclick="goThroughListForCall()"> Video Call All Peers! </button>
+	<button id="testCamera" onclick="testCamera()"> Test Camera </button>
+	<button id="checkConnections" onclick="checkConnections()"> Check Connections </button>
+	<button id="screenShare" onclick="shareScreenToAllPeers()"> Screen Share to All Peers! </button>
+	<div class="owncamera">
+		<video autoplay id="ownvideoelement"></video>
+	</div>
 
 	<div id="videoList">
 		<video autoplay id="videoelement"></video>
+	</div>
+	<div class="screenShareContainer">
+		<video autoplay id="screenSharing"></video>
 	</div>
 
 

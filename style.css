@@ -1,3 +1,25 @@
 #videoList {
 	border: solid 1px red;
 }
+
+.owncamera {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-end;
+	align-items: flex-start;
+	margin-bottom: 40px;
+}
+
+.screenShareContainer {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+#ownvideoelement {
+	width: 200px;
+}
+
+#screenSharing {
+	width: 1400px;
+}

@@ -1,9 +1,14 @@
-let peer = new Peer('rca2', {
+let peer = new Peer({
 	host: "192.168.1.32",
 	port: 9000,
 	path: "/sispeer",
 });
+
+
 let ownID;
+
+let connectionList = new Array();
+
 //On open, create a peer ID.
 peer.on('open', function (id) {
 	console.log('My peer ID is: ' + id);
@@ -15,7 +20,7 @@ function connectToPeer(destId) {
 	console.log(destId + " debug");
 	conn = peer.connect(destId);
 	console.log(conn);
-	console.log("yo");
+
 	conn.on('error', function (error) {
 		console.log(error);
 	});
@@ -25,6 +30,13 @@ function connectToPeer(destId) {
 		conn.on('data', function (data) {
 			console.log('Received', data);
 		});
+
+		if (!connectionList.includes(destId)) {
+			var p = document.createElement('p');
+			p.innerHTML = destId;
+			connectionList.push(destId);
+			document.getElementById("connectionIndicator").appendChild(p);
+		}
 
 		// Send messages
 		conn.send('Hello!');
@@ -36,21 +48,42 @@ function sendMessage(text) {
 	conn.send(text);
 }
 
-function callPeer(destId) {
-	var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-	getUserMedia({ video: true, audio: true }, function (stream) {
-		var call = peer.call(destId, stream);
+
+async function goThroughListForCall() {
+	const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+	connectionList.forEach(element => {
+		callPeer(element, stream);
+	});
+}
+
+async function callPeer(destId, stream) {
+	try {
+
+		var call = peer.call(destId, stream, { metadata: { "type": "videoCall" } });
+		var video = document.createElement('video');
 		call.on('stream', function (remoteStream) {
+			testCamera();
+			console.log(remoteStream);
 			var div = document.getElementById('videoList');
-			var video = document.createElement('video');
+
+			video.id = destId + '\'s video stream';
 			video.srcObject = remoteStream;
 			video.autoplay = true;
-			video.onloadedmetadata = function (e) { element.play(); };
 			div.appendChild(video);
+			//video.onloadedmetadata = () => { video.play(); };
 		});
-	}, function (err) {
+	} catch (err) {
 		console.log('Failed to get local stream', err);
-	});
+	}
+}
+
+async function testCamera() {
+	const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+	console.log(stream);
+	var video = document.getElementById('ownvideoelement');
+	video.srcObject = stream;
+	video.autoplay = true;
+	//video.onloadedmetadata = () => { video.play(); };
 }
 
 //On connection received say something
@@ -59,16 +92,70 @@ peer.on('connection', function (conn) { // Receive messages
 	conn.on('data', function (data) {
 		console.log('Received', data);
 	});
-	conn.on('error', function (error) {
-		console.log(error);
-	});
+
+
 	// Send messages
 	conn.send('Hello!');
 });
 
-peer.on('call', function (call) {
+peer.on('call', async function (call) {
+	console.log(call);
 	// Answer the call, providing our mediaStream
-	var getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-	getUserMedia({ video: true, audio: true });
-	call.answer(mediaStream);
+	try {
+		if (call.metadata.type === 'videoCall') {
+			const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+			call.answer(stream);
+			var blankvideo = document.createElement('video');
+			blankvideo.id = 'blank';
+
+			call.on('stream', function (remoteStream) {
+				var div = document.getElementById('videoList');
+				video.id = '\'s video stream';
+				video.srcObject = remoteStream;
+				video.autoplay = true;
+				div.appendChild(video);
+				//video.onloadedmetadata = () => { video.play(); };
+			});
+		} else if (call.metadata.type === 'screenShare') {
+			call.answer();
+			console.log('answered');
+			call.on('stream', function (remoteStream) {
+				var video = document.getElementById('screenSharing');
+				video.srcObject = remoteStream;
+				video.autoplay = true;
+			});
+			call.on('close', function (remoteStream) {
+				console.log(remoteStream);
+				console.log('closed');
+				var video = document.getElementById('screenSharing');
+				video.srcObject = blankvideo.srcObject;
+				video.autoplay = false;
+			});
+		}
+
+	} catch (err) {
+		console.log('Failed to get local stream', err);
+	};
+
 });
+
+function checkConnections() {
+	console.log(peer.connections);
+}
+
+async function shareScreenToAllPeers() {
+	const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+	connectionList.forEach(element => {
+		shareScreen(element, stream);
+	});
+}
+
+async function shareScreen(destId, stream) {
+	try {
+		peer.call(destId, stream, { metadata: { "type": "screenShare" } });
+
+	} catch (err) {
+		console.log('Failed to get local stream', err);
+	}
+}
+
