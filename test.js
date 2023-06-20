@@ -1,21 +1,31 @@
+/*
+	Aqui é definido o servidor que dá suporte ao Peer.js. 
+	Este servidor está self hosted pela sistrade, mas o código fonte é escrito pelos desenvolvedores do Peer.js.
+	Aqui também podem ser definidos os servidores de TURN e STUN para facilitar conexões entre redes com NATs simétricas.
+	Estes servidores só entram em ação se o WebRTC que está por trás do Peer.js não conseguir establecer uma conexão peer-to-peer.
+	O servidor de STUN pode ser encontrado online (ou implementado por nós), mas um servidor TURN teria de ser implementado por nós.
+*/
 let peer = new Peer({
 	host: "192.168.1.32",
 	port: 9000,
 	path: "/sispeer",
 });
 
-
+//O ID do próprio peer.
 let ownID;
-
+//Lista usada para armazenar IDs de conexões para facilitar conexões de dados, e chamadas multi-peer.
 let connectionList = new Array();
-
-//On open, create a peer ID.
+let conn;
+//Esta função dispara quando o utilizador abre uma página de html, criando o seu ID.
 peer.on('open', function (id) {
 	console.log('My peer ID is: ' + id);
 	ownID = id;
 });
-let conn;
-//On click, connect to the peer with the id in the text box.
+
+/*
+	Esta função conecta dois "peers" para uma conexão de dados.
+	Esta conexão pode ser usada para transferir mensagens de texto, e até ficheiros.
+*/
 function connectToPeer(destId) {
 	console.log(destId + " debug");
 	conn = peer.connect(destId);
