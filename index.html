@@ -27,6 +27,10 @@
 	<button id="testCamera" onclick="testCamera()"> Test Camera </button>
 	<button id="checkConnections" onclick="checkConnections()"> Check Connections </button>
 	<button id="screenShare" onclick="shareScreenToAllPeers()"> Screen Share to All Peers! </button>
+
+	<input type="file" id="fileSelect">
+	<button id="submitFile" onclick="submitFileToPeers(fileSelect.files)">Submit File to Peers</button>
+
 	<div class="owncamera">
 		<video autoplay id="ownvideoelement"></video>
 	</div>

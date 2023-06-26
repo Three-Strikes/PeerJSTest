@@ -4,17 +4,23 @@
 	Aqui também podem ser definidos os servidores de TURN e STUN para facilitar conexões entre redes com NATs simétricas.
 	Estes servidores só entram em ação se o WebRTC que está por trás do Peer.js não conseguir establecer uma conexão peer-to-peer.
 	O servidor de STUN pode ser encontrado online (ou implementado por nós), mas um servidor TURN teria de ser implementado por nós.
+	O servidor de STUN deve ser suficiente, e está por defeito a ir buscar um da google. ('stun:stun.l.google.com:19302')
 */
 let peer = new Peer({
 	host: "192.168.1.32",
 	port: 9000,
 	path: "/sispeer",
+	config: {
+		'iceServers': [
+			{ url: 'stun:stun.l.google.com:19302' }
+		]
+	}
 });
 
 //O ID do próprio peer.
 let ownID;
 //Lista usada para armazenar IDs de conexões para facilitar conexões de dados, e chamadas multi-peer.
-let connectionList = new Array();
+let connectedPeerIDList = new Array();
 let conn;
 //Esta função dispara quando o utilizador abre uma página de html, criando o seu ID.
 peer.on('open', function (id) {
@@ -41,10 +47,10 @@ function connectToPeer(destId) {
 			console.log('Received', data);
 		});
 
-		if (!connectionList.includes(destId)) { //Adicionar id's abaixo do header se a conexão for bem sucedida.
+		if (!connectedPeerIDList.includes(destId)) { //Adicionar id's abaixo do header se a conexão for bem sucedida.
 			var p = document.createElement('p');
 			p.innerHTML = destId;
-			connectionList.push(destId);
+			connectedPeerIDList.push(destId);
 			document.getElementById("connectionIndicator").appendChild(p);
 		}
 
@@ -55,7 +61,6 @@ function connectToPeer(destId) {
 //Envia uma mensagem de texto pela conexão de dados establecida.
 
 function sendMessage(text) {
-	console.log(text);
 	conn.send(text);
 }
 
@@ -64,7 +69,7 @@ function sendMessage(text) {
 async function goThroughListForCall() {
 	//Isto vai buscar os media devices a que o browser consegue aceder, neste caso, o microfone e a camara.
 	const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-	connectionList.forEach(element => {
+	connectedPeerIDList.forEach(element => {
 		callPeer(element, stream);
 	});
 }
@@ -184,7 +189,7 @@ function checkConnections() {
 async function shareScreenToAllPeers() {
 	//Isto dá prompt ao utilizador a que janela ou ecrã quer partilhar com o browser e outros peers.
 	const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-	connectionList.forEach(element => {
+	connectedPeerIDList.forEach(element => {
 		shareScreen(element, stream);
 	});
 }
@@ -201,3 +206,14 @@ async function shareScreen(destId, stream) {
 	}
 }
 
+
+async function submitFileToPeers(files) {
+	connectedPeerIDList.forEach(element => {
+		shareFile(files, element);
+	});
+}
+
+function shareFile(files, destinationId) {
+	console.log(files);
+
+}
