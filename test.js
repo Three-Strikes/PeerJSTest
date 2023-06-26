@@ -140,6 +140,7 @@ peer.on('call', async function (call) {
 	try {
 		if (call.metadata.type === 'videoCall') {
 			const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+			testCamera();
 			call.answer(stream);
 			var blankvideo = document.createElement('video');
 			blankvideo.id = 'blank';
