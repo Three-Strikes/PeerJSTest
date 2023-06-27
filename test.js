@@ -279,6 +279,7 @@ function createRecorder(stream, mimeType) {
 
 /*
 	Os chunks do vídeo são transformados num Blob, que depois é tranferido pelo browser, criando um fcheiro de vídeo.
+	È necessário uma library presente nos scripts de html.
 */
 async function saveFile(recordedChunks, mimeType, duration) {
 	console.log(duration);
