@@ -218,3 +218,67 @@ function shareFile(files, destinationId) {
 	console.log(files);
 
 }
+
+let mediaRecorder;
+async function recordScreen() {
+	let stream = await getScreenStream();
+	stream.getTracks().forEach((track) =>
+		track.addEventListener("ended", () => {
+			console.log('stopped');
+			stream.getAudioTracks().forEach((audio) => audio.stop());
+			if (recorder) recorder.stop();
+			recorder = null;
+		})
+	);
+	let mimeType = 'video/mp4;audio/mp4';
+	mediaRecorder = createRecorder(stream, mimeType);
+}
+
+
+async function getScreenStream() {
+	return await navigator.mediaDevices.getDisplayMedia({
+		preferCurrentTab: true,
+		audio: true,
+		video: { displaySurface: "browser" }
+
+	});
+}
+
+function createRecorder(stream, mimeType) {
+	// the stream data is stored in this array
+	let recordedChunks = [];
+
+	const mediaRecorder = new MediaRecorder(stream);
+
+	mediaRecorder.ondataavailable = function (e) {
+		if (e.data.size > 0) {
+			recordedChunks.push(e.data);
+		}
+	};
+	mediaRecorder.onstop = function () {
+		saveFile(recordedChunks, mimeType);
+		recordedChunks = [];
+	};
+	mediaRecorder.start(200); // For every 200ms the stream data will be stored in a separate chunk.
+	return mediaRecorder;
+}
+
+function saveFile(recordedChunks, mimeType) {
+
+	const blob = new Blob(recordedChunks, {
+		type: mimeType
+	});
+	let filename = window.prompt('Enter file name');
+	if (filename !== '') {
+		downloadLink = document.createElement('a');
+		downloadLink.href = URL.createObjectURL(blob);
+		downloadLink.download = filename + '.webm';
+		document.body.appendChild(downloadLink);
+		downloadLink.click();
+		URL.revokeObjectURL(blob); // clear from memory
+		document.body.removeChild(downloadLink);
+	}
+
+
+
+}
