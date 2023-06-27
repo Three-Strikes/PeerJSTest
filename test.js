@@ -226,8 +226,8 @@ async function recordScreen() {
 		track.addEventListener("ended", () => {
 			console.log('stopped');
 			stream.getAudioTracks().forEach((audio) => audio.stop());
-			if (recorder) recorder.stop();
-			recorder = null;
+			if (mediaRecorder) mediaRecorder.stop();
+			mediaRecorder = null;
 		})
 	);
 	let mimeType = 'video/mp4;audio/mp4';
@@ -244,6 +244,7 @@ async function getScreenStream() {
 	});
 }
 
+let startTime;
 function createRecorder(stream, mimeType) {
 	// the stream data is stored in this array
 	let recordedChunks = [];
@@ -256,23 +257,25 @@ function createRecorder(stream, mimeType) {
 		}
 	};
 	mediaRecorder.onstop = function () {
-		saveFile(recordedChunks, mimeType);
+		var duration = Date.now() - startTime;
+		saveFile(recordedChunks, mimeType, duration);
 		recordedChunks = [];
 	};
 	mediaRecorder.start(200); // For every 200ms the stream data will be stored in a separate chunk.
+	startTime = Date.now();
 	return mediaRecorder;
 }
 
-function saveFile(recordedChunks, mimeType) {
-
-	const blob = new Blob(recordedChunks, {
+async function saveFile(recordedChunks, mimeType, duration) {
+	console.log(duration);
+	const blob = await ysFixWebmDuration(new Blob(recordedChunks, {
 		type: mimeType
-	});
+	}), duration, { logger: false }); //const fixBlob = await fixWebmDuration(new Blob([...blobSlice], { type: mimeType }));
 	let filename = window.prompt('Enter file name');
 	if (filename !== '') {
 		downloadLink = document.createElement('a');
 		downloadLink.href = URL.createObjectURL(blob);
-		downloadLink.download = filename + '.webm';
+		downloadLink.download = filename + '.mp4';
 		document.body.appendChild(downloadLink);
 		downloadLink.click();
 		URL.revokeObjectURL(blob); // clear from memory
