@@ -219,6 +219,9 @@ function shareFile(files, destinationId) {
 
 }
 
+/*
+	Esta função começa o processo de gravar o ecrã, adicionando um evento para ter a certeza de que as tracks da stream encerram quando esta é parada.
+*/
 let mediaRecorder;
 async function recordScreen() {
 	let stream = await getScreenStream();
@@ -234,7 +237,10 @@ async function recordScreen() {
 	mediaRecorder = createRecorder(stream, mimeType);
 }
 
-
+/*
+	Esta função pede ao utilizador o que gravar.
+	Preffer current tab desbloqueia a opção de partilhar  a própria tab, gravando a chamada.
+*/
 async function getScreenStream() {
 	return await navigator.mediaDevices.getDisplayMedia({
 		preferCurrentTab: true,
@@ -243,6 +249,10 @@ async function getScreenStream() {
 
 	});
 }
+/*
+	Esta função utiliza o MediaRecorder para gravar sobre a stream criada, e coloca o conteúdo numa array de chunks a casa 200 ms.
+	Date.now() é usado para calcular a duração do vídeo, usada no script adicional que dá fix à barra de progresso do vídeo.
+*/
 
 let startTime;
 function createRecorder(stream, mimeType) {
@@ -266,6 +276,10 @@ function createRecorder(stream, mimeType) {
 	return mediaRecorder;
 }
 
+
+/*
+	Os chunks do vídeo são transformados num Blob, que depois é tranferido pelo browser, criando um fcheiro de vídeo.
+*/
 async function saveFile(recordedChunks, mimeType, duration) {
 	console.log(duration);
 	const blob = await ysFixWebmDuration(new Blob(recordedChunks, {
